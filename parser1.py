@@ -38,13 +38,16 @@ def csv_writer(data, file_name):
             writer.writerow(line)
 
 
-if __name__ == '__main__':
-
+def main():
     in_sys_file = glob.glob('*SYS*')
 
     alias = parsing(in_sys_file[0], "alias.")
     zone = parsing(in_sys_file[0], "zone.")
     cfg = parsing(in_sys_file[0], "cfg.", no_value=True)
 
-    csv_writer(alias, cfg+"_alias.csv")
-    csv_writer(zone, cfg+"_zone.csv")
+    csv_writer(alias, cfg + "_alias.csv")
+    csv_writer(zone, cfg + "_zone.csv")
+
+
+if __name__ == '__main__':
+    main()
