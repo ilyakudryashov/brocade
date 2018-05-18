@@ -18,11 +18,11 @@ def parsing(file_path, prefix, no_value=False):
                 attribute = line[len(prefix):s]       # Отрезаем префикс строки, ':' и все что дальше. Присваеваем в att
                 value = line[s+1:]                    # Присваеваем в value все что после ':'
                 if no_value:
-                    d = attribute                     # Новая строка только из att, если есть novalue
+                    result = attribute                # Возращаем att как результат функции, если есть no_value
                 else:
                     d = attribute+';'+value           # Склеиваем в новую строку с разделителм ';'
-                a = d.split(';')                      # Режем строку на список по разделителю ';'
-                result.append(a)                      # Вставляем полученый список как элемент результирующего списка
+                    a = d.split(';')                  # Режем строку на список по разделителю ';'
+                    result.append(a)                  # Вставляем полученый список как элемент результирующего списка
             else:
                 continue
     return result
@@ -40,25 +40,11 @@ def csv_writer(data, file_name):
 
 if __name__ == '__main__':
 
-    # in_sys_file = glob.glob('test_files/*SYS*')
     in_sys_file = glob.glob('*SYS*')
-    print(in_sys_file[0])
-    print(os.getcwd())
-
-    """
-    print(parsing(in_sys_file[0], "alias."))
-    print(parsing(in_sys_file[0], "zone."))
-    print(csv_writer.__doc__)
-    """
 
     alias = parsing(in_sys_file[0], "alias.")
     zone = parsing(in_sys_file[0], "zone.")
     cfg = parsing(in_sys_file[0], "cfg.", no_value=True)
-    print(alias)
-    print(zone)
-    print(cfg)
 
-    #csv_writer(alias, "alias.csv")
-    #csv_writer(zone, "zone.csv")
-
-
+    csv_writer(alias, cfg+"_alias.csv")
+    csv_writer(zone, cfg+"_zone.csv")
