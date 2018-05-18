@@ -2,13 +2,8 @@ import glob
 import os
 import csv
 
-#in_sys_file = glob.glob('test_files/*SYS*')
-in_sys_file = glob.glob('*SYS*')
-print(in_sys_file[0])
-print(os.getcwd())
 
-
-def parsing(file_path, prefix):
+def parsing(file_path, prefix, no_value=False):
     """
     Функция создания списка из строк с префиксами передаваемых в prefix
     """
@@ -22,7 +17,10 @@ def parsing(file_path, prefix):
                 s = line.find(':')                    # Ищем первое вхождение ':'  в строке
                 attribute = line[len(prefix):s]       # Отрезаем префикс строки, ':' и все что дальше. Присваеваем в att
                 value = line[s+1:]                    # Присваеваем в value все что после ':'
-                d = attribute+';'+value               # Склеиваем в новую строку с разделителм ';'
+                if no_value:
+                    d = attribute                     # Новая строка только из att, если есть novalue
+                else:
+                    d = attribute+';'+value           # Склеиваем в новую строку с разделителм ';'
                 a = d.split(';')                      # Режем строку на список по разделителю ';'
                 result.append(a)                      # Вставляем полученый список как элемент результирующего списка
             else:
@@ -42,6 +40,11 @@ def csv_writer(data, file_name):
 
 if __name__ == '__main__':
 
+    # in_sys_file = glob.glob('test_files/*SYS*')
+    in_sys_file = glob.glob('*SYS*')
+    print(in_sys_file[0])
+    print(os.getcwd())
+
     """
     print(parsing(in_sys_file[0], "alias."))
     print(parsing(in_sys_file[0], "zone."))
@@ -50,6 +53,12 @@ if __name__ == '__main__':
 
     alias = parsing(in_sys_file[0], "alias.")
     zone = parsing(in_sys_file[0], "zone.")
-    csv_writer(alias, "alias.csv")
-    csv_writer(zone, "zone.csv")
+    cfg = parsing(in_sys_file[0], "cfg.", no_value=True)
+    print(alias)
+    print(zone)
+    print(cfg)
+
+    #csv_writer(alias, "alias.csv")
+    #csv_writer(zone, "zone.csv")
+
 
