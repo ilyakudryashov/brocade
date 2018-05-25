@@ -1,4 +1,3 @@
-import glob
 import os
 import csv
 import fnmatch
@@ -39,15 +38,15 @@ def csv_writer(data, file_name):
             writer.writerow(line)
 
 
-def parsing_config_objects(file):
+def parsing_cfg_objects_and_writen_to_csv(in_file):
     """
     Парсит файл по пути переданному в file. Создает два csv файла - с алиасами и зонами.
-    :param file:    Необходимо передать полный путь к файлу
+    :param in_file:    Необходимо передать полный путь к файлу
     :return:        Ничего не возвращает. Создает файлы
     """
-    alias = parsing(file, "alias.")
-    zone = parsing(file, "zone.")
-    cfg = parsing(file, "cfg.", no_value=True)
+    alias = parsing(in_file, "alias.")
+    zone = parsing(in_file, "zone.")
+    cfg = parsing(in_file, "cfg.", no_value=True)
     csv_writer(alias, cfg + "_alias.csv")
     csv_writer(zone, cfg + "_zone.csv")
 
@@ -67,5 +66,6 @@ def find_all_files_by_template_in_subdirs(pattern, folder=os.getcwd()):
 
 if __name__ == '__main__':
     for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt'):
-        parsing_config_objects(file)
+        parsing_cfg_objects_and_writen_to_csv(file)
+
 
