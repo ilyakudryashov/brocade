@@ -1,6 +1,7 @@
 import glob
 import os
 import csv
+import fnmatch
 
 
 def parsing(file_path, prefix, no_value=False):
@@ -38,16 +39,33 @@ def csv_writer(data, file_name):
             writer.writerow(line)
 
 
-def main():
-    in_sys_file = glob.glob('*SYS*')
-
-    alias = parsing(in_sys_file[0], "alias.")
-    zone = parsing(in_sys_file[0], "zone.")
-    cfg = parsing(in_sys_file[0], "cfg.", no_value=True)
-
+def parsing_config_objects(file):
+    """
+    Парсит файл по пути переданному в file. Создает два csv файла - с алиасами и зонами.
+    :param file:    Необходимо передать полный путь к файлу
+    :return:        Ничего не возвращает. Создает файлы
+    """
+    alias = parsing(file, "alias.")
+    zone = parsing(file, "zone.")
+    cfg = parsing(file, "cfg.", no_value=True)
     csv_writer(alias, cfg + "_alias.csv")
     csv_writer(zone, cfg + "_zone.csv")
 
 
+def find_all_files_by_template_in_subdirs(pattern, folder=os.getcwd()):
+    """
+    Ищет все файлы по шаблону (pattern) в указанной папке (folder) и во всех вложенных.
+    Если folder не указн то ищется в текущем каталоге
+    """
+    result = []
+    for root, dirs, files in os.walk(folder):
+        for filename in fnmatch.filter(files, pattern):
+            fullname = os.path.join(root, filename)
+            result.append(fullname)
+    return result
+
+
 if __name__ == '__main__':
-    main()
+    for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt'):
+        parsing_config_objects(file)
+
