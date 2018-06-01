@@ -11,9 +11,10 @@ host = stancils.Masters("FCHOST")
 
 def visio_connect_objects(begin,end):
     connectorMaster = appVisio.Application.ConnectorToolDataObject
-    connector = page.Drop(connectorMaster, 0, 0)
-    connector.Cells("BeginX").GlueTo(begin.Cells("PinX"))
-    connector.Cells("EndX").GlueTo(end.Cells("PinX"))
+    connector = page.Drop(connectorMaster, 2, 2)
+    #connector.Cells("BeginArrow").FormulaU = 10
+    connector.Cells("BeginX").GlueTo(begin.Cells("Connections.X1"))
+    connector.Cells("EndX").GlueTo(end.Cells("Connections.X1"))
 
 def visio_create_object(type,name,x,y):
     obj = page.Drop(type,x,y)
