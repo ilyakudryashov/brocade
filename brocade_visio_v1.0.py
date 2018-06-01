@@ -1,7 +1,7 @@
 import win32com.client
 
 appVisio = win32com.client.Dispatch("Visio.Application")
-appVisio.Visible =1
+appVisio.Visible = 1
 doc = appVisio.Documents.Add("Basic Diagram.vst")
 page = doc.Pages.Item(1)
 stancils = appVisio.Documents("SAN_Health_Visio_Stencils_External.vss")
@@ -25,7 +25,7 @@ def visio_create_object(type, name, x, y):
 
 switch1 = visio_create_object(switch,'коммутатор 1', 3, 3)
 switch2 = visio_create_object(switch,'коммутатор 2', 5, 3)
-host1 = visio_create_object(host, 'хост 1', 4,4)
+host1 = visio_create_object(host, 'хост 1', 4, 4)
 
 visio_connect_objects(switch1,host1)
 visio_connect_objects(switch1,switch2)
