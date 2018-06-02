@@ -102,15 +102,7 @@ def upload_zones_to_db():
 
 
 def upload_cfg_object_to_db(file, object_name):
-    id1 = object_name + '_id'
-    name = object_name + '_name'
-    members = object_name + '_members'
-    cursor.execute('''
-        CREATE TABLE alias (
-        alias_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        alias_name TEXT,
-        alias_members TEXT
-        );''')
+    cursor.execute('CREATE TABLE '+object_name+' ('+object_name+'_id INTEGER PRIMARY KEY AUTOINCREMENT,'+object_name+'_name TEXT,'+object_name+'_members TEXT);')
     find = object_name + '.'
     object = parsing(file, find)
     for i in range(len(object)):
@@ -123,17 +115,20 @@ def upload_cfg_object_to_db(file, object_name):
                 members = members + object[i][j]
             else:
                 members = members + object[i][j] + ';'
-        cursor.execute('''INSERT INTO alias (alias_name,alias_members) VALUES (?,?);''', (name, members))
+        cursor.execute('INSERT INTO '+object_name+' ('+object_name+'_name,'+object_name+'_members) VALUES (?,?);', (name, members))
 
 
 #cfgset = set()
 for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt'):
     path = file
     cfg = parsing(file, "cfg.", no_value=True)
-
-connection = sqlite3.connect(cfg+'.sqlite')
-cursor = connection.cursor()
-upload_cfg_object_to_db(path, 'alias')
+    connection = sqlite3.connect(cfg+'.sqlite')
+    cursor = connection.cursor()
+    upload_cfg_object_to_db(path, 'alias')
+    upload_cfg_object_to_db(path, 'zone')
+    upload_cfg_object_to_db(path, 'cfg')
+    connection.commit()
+    connection.close()
 
 """cursor.executescript('''
     CREATE TABLE alias (
@@ -150,5 +145,4 @@ upload_cfg_object_to_db(path, 'alias')
 upload_alias_to_db()
 upload_zones_to_db()"""
 
-connection.commit()
-connection.close()
+
