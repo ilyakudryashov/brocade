@@ -102,12 +102,15 @@ def upload_zones_to_db():
 
 
 def upload_cfg_object_to_db(file, object_name):
+    id1 = object_name + '_id'
+    name = object_name + '_name'
+    members = object_name + '_members'
     cursor.execute('''
-        CREATE TABLE ? (
-        ? INTEGER PRIMARY KEY AUTOINCREMENT,
-        ? TEXT,
-        ? TEXT
-        );''', (object_name, object_name + "_id", object_name + "_name", object_name + "_members"))
+        CREATE TABLE alias (
+        alias_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        alias_name TEXT,
+        alias_members TEXT
+        );''')
     find = object_name + '.'
     object = parsing(file, find)
     for i in range(len(object)):
@@ -120,7 +123,7 @@ def upload_cfg_object_to_db(file, object_name):
                 members = members + object[i][j]
             else:
                 members = members + object[i][j] + ';'
-        cursor.execute('''INSERT INTO ? (?,?) VALUES (?,?);''', (object_name, object_name +'_name', object_name + '_members', name, members))
+        cursor.execute('''INSERT INTO alias (alias_name,alias_members) VALUES (?,?);''', (name, members))
 
 
 #cfgset = set()
