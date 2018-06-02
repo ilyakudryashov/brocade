@@ -100,13 +100,39 @@ def upload_zones_to_db():
                 zone_members = zone_members + Z[i][j] + ';'
         cursor.execute('''INSERT INTO zone (zone_name,zone_members) VALUES (?,?);''', (zone_name, zone_members))
 
-cfgset = set()
+
+def upload_cfg_object_to_db(file, object_name):
+    cursor.execute('''
+        CREATE TABLE ? (
+        ? INTEGER PRIMARY KEY AUTOINCREMENT,
+        ? TEXT,
+        ? TEXT
+        );''', (object_name, object_name + "_id", object_name + "_name", object_name + "_members"))
+    find = object_name + '.'
+    object = parsing(file, find)
+    for i in range(len(object)):
+        name = None
+        members = ' '
+        for j in range(len(object[i])):
+            if j == 0:
+                name = object[i][j]
+            elif j == len(object[i])-1:
+                members = members + object[i][j]
+            else:
+                members = members + object[i][j] + ';'
+        cursor.execute('''INSERT INTO ? (?,?) VALUES (?,?);''', (object_name, object_name +'_name', object_name + '_members', name, members))
+
+
+#cfgset = set()
 for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt'):
+    path = file
     cfg = parsing(file, "cfg.", no_value=True)
 
 connection = sqlite3.connect(cfg+'.sqlite')
 cursor = connection.cursor()
-cursor.executescript('''
+upload_cfg_object_to_db(path, 'alias')
+
+"""cursor.executescript('''
     CREATE TABLE alias (
     alias_id INTEGER PRIMARY KEY AUTOINCREMENT,
     alias_name TEXT,
@@ -119,7 +145,7 @@ cursor.executescript('''
     );
     ''')
 upload_alias_to_db()
-upload_zones_to_db()
+upload_zones_to_db()"""
 
 connection.commit()
 connection.close()
