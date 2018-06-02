@@ -1,7 +1,7 @@
+import sqlite3
 import os
 import csv
 import fnmatch
-import tkinter
 
 
 def parsing(file_path, prefix, no_value=False):
@@ -71,51 +71,55 @@ def parsing_sshow_sys(value, in_csv=False):
     return result
 
 
-def load_sshow_sys(value):
-    text_result.delete('1.0', 'end')
-    text_result.insert('1.0', parsing_sshow_sys(value))
+def upload_alias_to_db():
+    A = parsing_sshow_sys('alias')
+    for i in range(len(A)):
+        alias_name = None
+        alias_members = ' '
+        for j in range(len(A[i])):
+            if j == 0:
+                alias_name = A[i][j]
+            elif j == len(A[i])-1:
+                alias_members = alias_members + A[i][j]
+            else:
+                alias_members = alias_members + A[i][j] + ';'
+        cursor.execute('''INSERT INTO alias (alias_name,alias_members) VALUES (?,?);''', (alias_name, alias_members))
 
 
-if __name__ == '__main__':
-    root = tkinter.Tk()
-    root.title('Brocade Parser v2.0')
-    root.minsize(800, 450)
+def upload_zones_to_db():
+    Z = parsing_sshow_sys('zone')
+    for i in range(len(Z)):
+        zone_name = None
+        zone_members = ' '
+        for j in range(len(Z[i])):
+            if j == 0:
+                zone_name = Z[i][j]
+            elif j == len(Z[i])-1:
+                zone_members = zone_members + Z[i][j]
+            else:
+                zone_members = zone_members + Z[i][j] + ';'
+        cursor.execute('''INSERT INTO zone (zone_name,zone_members) VALUES (?,?);''', (zone_name, zone_members))
 
-    frame_button = tkinter.Frame(root, bg='gray15', border=1, relief='raise')
-    frame_text = tkinter.LabelFrame(root, bg='gray15', border=1, relief='flat', text='Результат:', fg='sienna1')
+cfgset = set()
+for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt'):
+    cfg = parsing(file, "cfg.", no_value=True)
 
-    frame_button.pack(side='top', fill='both')
-    frame_text.pack(side='top', fill='both')
+connection = sqlite3.connect(cfg+'.sqlite')
+cursor = connection.cursor()
+cursor.executescript('''
+    CREATE TABLE alias (
+    alias_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    alias_name TEXT,
+    alias_members TEXT
+    );
+    CREATE TABLE zone (
+    zone_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    zone_name TEXT,
+    zone_members TEXT
+    );
+    ''')
+upload_alias_to_db()
+upload_zones_to_db()
 
-    # ---frame_button---
-    button_alias_to_csv = tkinter.Button(frame_button, text="alias->CSV", bg='gray20', fg='sienna1', font='Arial 8',
-                                         relief='raise', overrelief='sunken', activebackground='sienna1')
-    button_zone_to_csv = tkinter.Button(frame_button, text="zone->CSV", bg='gray20', fg='sienna1', font='Arial 8',
-                                        relief='raise', overrelief='sunken', activebackground='sienna1')
-    button_load_alias_in_text = tkinter.Button(frame_button, text="показать все alias", bg='gray20', fg='sienna1',
-                                               font='Arial 8', relief='raise', overrelief='sunken',
-                                               activebackground='sienna1')
-
-    button_alias_to_csv.pack(side='left')
-    button_zone_to_csv.pack(side='left')
-    button_load_alias_in_text.pack(side='left')
-    # ------------------
-
-    # ---frame_text-----
-    text_result = tkinter.Text(frame_text, font='Arial 7', bg='gray20', fg='sienna1')
-    scrollbar_text_result = tkinter.Scrollbar(frame_text, bg='gray20', activebackground='gray20')
-    scrollbar_text_result['command'] = text_result.yview
-    text_result['yscrollcommand'] = scrollbar_text_result.set
-
-    text_result.pack(side='left', fill='both')
-    scrollbar_text_result.pack(side='right', fill='y')
-    # ------------------
-
-    button_alias_to_csv.bind("<Button-1>", lambda event: parsing_sshow_sys('alias', in_csv=True))
-    button_zone_to_csv.bind("<Button-1>", lambda event: parsing_sshow_sys('zone', in_csv=True))
-    #button_load_alias_in_text("<Button-1>", load)
-    load_sshow_sys('alias')
-
-    root.mainloop()
-
-
+connection.commit()
+connection.close()
