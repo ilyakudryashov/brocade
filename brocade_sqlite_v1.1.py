@@ -79,20 +79,27 @@ def upload_cfg_object_to_db(file, object_name):
     :param object_name:
     :return:
     """
-    cursor.execute('CREATE TABLE '+object_name+' ('+object_name+'_id INTEGER PRIMARY KEY AUTOINCREMENT,'+object_name+'_name TEXT,'+object_name+'_members TEXT);')
+    cursor.execute('CREATE TABLE '+object_name+' ('+object_name+'_id INTEGER PRIMARY KEY AUTOINCREMENT,'+object_name+'_name TEXT,'+object_name+'_members1 TEXT);')
     find = object_name + '.'
     object = parsing(file, find)
     for i in range(len(object)):
         name = None
-        members = ' '
+        members = None
         for j in range(len(object[i])):
             if j == 0:
-                name = object[i][j]
-            elif j == len(object[i])-1:
-                members = members + object[i][j]
+                pass
+            elif j == 1:
+                name = object[i][0]
+                members = object[i][j]
+                cursor.execute(
+                    'INSERT INTO ' + object_name + ' (' + object_name + '_name,' + object_name + '_members1) VALUES (?,?);',
+                    (name, members))
             else:
-                members = members + object[i][j] + ';'
-        cursor.execute('INSERT INTO '+object_name+' ('+object_name+'_name,'+object_name+'_members) VALUES (?,?);', (name, members))
+                name = object[i][0]
+                k = str(j)
+                cursor.execute('ALTER TABLE ' + object_name + ' ADD COLUMN ' + object_name + '_members' + k + ' TEXT;')
+                members = object[i][j]
+                cursor.execute('INSERT INTO '+object_name+' ('+object_name+'_name,'+object_name+'_members'+k+') VALUES (?,?);', (name, members))
 
 
 cfg_set = set()
