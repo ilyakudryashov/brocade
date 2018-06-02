@@ -71,37 +71,14 @@ def parsing_sshow_sys(value, in_csv=False):
     return result
 
 
-def upload_alias_to_db():
-    A = parsing_sshow_sys('alias')
-    for i in range(len(A)):
-        alias_name = None
-        alias_members = ' '
-        for j in range(len(A[i])):
-            if j == 0:
-                alias_name = A[i][j]
-            elif j == len(A[i])-1:
-                alias_members = alias_members + A[i][j]
-            else:
-                alias_members = alias_members + A[i][j] + ';'
-        cursor.execute('''INSERT INTO alias (alias_name,alias_members) VALUES (?,?);''', (alias_name, alias_members))
-
-
-def upload_zones_to_db():
-    Z = parsing_sshow_sys('zone')
-    for i in range(len(Z)):
-        zone_name = None
-        zone_members = ' '
-        for j in range(len(Z[i])):
-            if j == 0:
-                zone_name = Z[i][j]
-            elif j == len(Z[i])-1:
-                zone_members = zone_members + Z[i][j]
-            else:
-                zone_members = zone_members + Z[i][j] + ';'
-        cursor.execute('''INSERT INTO zone (zone_name,zone_members) VALUES (?,?);''', (zone_name, zone_members))
-
-
 def upload_cfg_object_to_db(file, object_name):
+    """
+    Создает в базе данных таблицу с именем переденным в object_name. В таблицу заносятся данные полученные после
+    парсинга файла переданного в file.
+    :param file: 
+    :param object_name:
+    :return:
+    """
     cursor.execute('CREATE TABLE '+object_name+' ('+object_name+'_id INTEGER PRIMARY KEY AUTOINCREMENT,'+object_name+'_name TEXT,'+object_name+'_members TEXT);')
     find = object_name + '.'
     object = parsing(file, find)
@@ -118,17 +95,20 @@ def upload_cfg_object_to_db(file, object_name):
         cursor.execute('INSERT INTO '+object_name+' ('+object_name+'_name,'+object_name+'_members) VALUES (?,?);', (name, members))
 
 
-#cfgset = set()
+cfg_set = set()
 for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt'):
-    path = file
     cfg = parsing(file, "cfg.", no_value=True)
-    connection = sqlite3.connect(cfg+'.sqlite')
-    cursor = connection.cursor()
-    upload_cfg_object_to_db(path, 'alias')
-    upload_cfg_object_to_db(path, 'zone')
-    upload_cfg_object_to_db(path, 'cfg')
-    connection.commit()
-    connection.close()
+    if cfg in cfg_set:
+        pass
+    else:
+        cfg_set.add(cfg)
+        connection = sqlite3.connect(cfg+'.sqlite')
+        cursor = connection.cursor()
+        upload_cfg_object_to_db(file, 'alias')
+        upload_cfg_object_to_db(file, 'zone')
+        upload_cfg_object_to_db(file, 'cfg')
+        connection.commit()
+        connection.close()
 
 """cursor.executescript('''
     CREATE TABLE alias (
