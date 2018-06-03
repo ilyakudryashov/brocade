@@ -73,7 +73,7 @@ def parsing_sshow_sys(value, in_csv=False):
 
 def upload_cfg_object_to_db(file, object_name):
     """
-    Создает в базе данных таблицу с именем переденным в object_name (подходит для alias и zone).
+    Создает в базе данных таблицу с именем переденным в object_name (подходит только для alias и zone).
     В таблицу заносятся данные полученные после парсинга файла переданного в file.
     :param file:
     :param object_name:
