@@ -73,33 +73,37 @@ def parsing_sshow_sys(value, in_csv=False):
 
 def upload_cfg_object_to_db(file, object_name):
     """
-    Создает в базе данных таблицу с именем переденным в object_name. В таблицу заносятся данные полученные после
-    парсинга файла переданного в file.
+    Создает в базе данных таблицу с именем переденным в object_name (подходит для alias и zone).
+    В таблицу заносятся данные полученные после парсинга файла переданного в file.
     :param file:
     :param object_name:
     :return:
     """
-    cursor.execute('CREATE TABLE '+object_name+' ('+object_name+'_id INTEGER PRIMARY KEY AUTOINCREMENT,'+object_name+'_name TEXT,'+object_name+'_members1 TEXT);')
+    cursor.execute('CREATE TABLE '+object_name+' ('+object_name+'_id INTEGER PRIMARY KEY AUTOINCREMENT,'+object_name+'_name TEXT);')
     find = object_name + '.'
     object = parsing(file, find)
     for i in range(len(object)):
-        name = None
-        members = None
+        name = str()
+        members = str()
+        members_column = str()
         for j in range(len(object[i])):
-            if j == 0:
-                pass
-            elif j == 1:
-                name = object[i][0]
-                members = object[i][j]
-                cursor.execute(
-                    'INSERT INTO ' + object_name + ' (' + object_name + '_name,' + object_name + '_members1) VALUES (?,?);',
-                    (name, members))
+            if j==0:
+                name = object[i][j]
+            elif j == len(object[i])-1:
+                members_column = members_column + object_name + '_member' + str(j)
+                members = members + '"'+str(object[i][j])+'"'
+                try:
+                    cursor.execute('ALTER TABLE ' + object_name + ' ADD COLUMN ' + object_name + '_member' + str(j) + ' TEXT;')
+                except:
+                    pass
             else:
-                name = object[i][0]
-                k = str(j)
-                cursor.execute('ALTER TABLE ' + object_name + ' ADD COLUMN ' + object_name + '_members' + k + ' TEXT;')
-                members = object[i][j]
-                cursor.execute('INSERT INTO '+object_name+' ('+object_name+'_name,'+object_name+'_members'+k+') VALUES (?,?);', (name, members))
+                members_column = members_column+object_name+'_member'+str(j)+', '
+                members = members + '"'+str(object[i][j]) + '", '
+                try:
+                    cursor.execute('ALTER TABLE ' + object_name + ' ADD COLUMN ' + object_name + '_member' + str(j) + ' TEXT;')
+                except:
+                    pass
+        cursor.execute('INSERT INTO ' + object_name + ' (' + object_name + '_name, ' + members_column + ') VALUES ("'+name+'", '+members+');')
 
 
 cfg_set = set()
@@ -113,23 +117,7 @@ for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt'):
         cursor = connection.cursor()
         upload_cfg_object_to_db(file, 'alias')
         upload_cfg_object_to_db(file, 'zone')
-        upload_cfg_object_to_db(file, 'cfg')
+        #upload_cfg_object_to_db(file, 'cfg')
         connection.commit()
         connection.close()
-
-"""cursor.executescript('''
-    CREATE TABLE alias (
-    alias_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    alias_name TEXT,
-    alias_members TEXT
-    );
-    CREATE TABLE zone (
-    zone_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    zone_name TEXT,
-    zone_members TEXT
-    );
-    ''')
-upload_alias_to_db()
-upload_zones_to_db()"""
-
 
