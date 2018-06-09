@@ -2,6 +2,7 @@ import os
 import gzip
 import fnmatch
 import csv
+import sqlite3
 
 
 class _SupportSaveFile:
@@ -15,9 +16,9 @@ class _SupportSaveFile:
     target_path = None
     cfg_name = None
 
-    def __init__(self, path):
+    def __init__(self, path, target_path=os.getcwd()):
         self.file_full_path = path
-        self.target_path = os.getcwd()
+        self.target_path = target_path
         (self.file_path, self.file_name) = os.path.split(path)
         if 'SSHOW_SYS' in path:
             self.file_type = 'sys'
@@ -75,7 +76,7 @@ class _SupportSaveFile:
         else:
             print('не SSHOW_SYS файл')
 
-    def upload_cfg_object_to_db(self, file, object_name):
+    def insert_cfg_object_to_table(self, object_name, cursor):
         """
         Создает в базе данных таблицу с именем переденным в object_name (подходит только для alias и zone).
         В таблицу заносятся данные полученные после парсинга файла переданного в file.
@@ -86,7 +87,7 @@ class _SupportSaveFile:
         cursor.execute(
             'CREATE TABLE ' + object_name + ' (' + object_name + '_id INTEGER PRIMARY KEY AUTOINCREMENT,' + object_name + '_name TEXT);')
         find = object_name + '.'
-        object = parsing(file, find)
+        object = self.parsing_by_prefix(find)
         for i in range(len(object)):
             name = str()
             members = str()
@@ -113,6 +114,20 @@ class _SupportSaveFile:
             cursor.execute(
                 'INSERT INTO ' + object_name + ' (' + object_name + '_name, ' + members_column + ') VALUES ("' + name + '", ' + members + ');')
 
+    def upload_cfg_object_to_db(self):
+        """
+
+        :return:
+        """
+        connection = sqlite3.connect(self.target_path+'\\'+self.cfg_name+'.sqlite')
+        cursor = connection.cursor()
+        self.insert_cfg_object_to_table('alias', cursor)
+        self.insert_cfg_object_to_table('zone', cursor)
+        #self.insert_cfg_object_to_table('cfg', cursor)
+        connection.commit()
+        connection.close()
+
+
 def find_all_files_by_template_in_subdirs(pattern, folder=os.getcwd()):
     """
     Ищет все файлы по шаблону (pattern) в указанной папке (folder) и во всех вложенных.
@@ -127,21 +142,17 @@ def find_all_files_by_template_in_subdirs(pattern, folder=os.getcwd()):
 
 
 if __name__ == '__main__':
-    """
-
-            cfg_set.add(cfg)
-            connection = sqlite3.connect(cfg + '.sqlite')
-            cursor = connection.cursor()
-            upload_cfg_object_to_db(file, 'alias')
-            upload_cfg_object_to_db(file, 'zone')
-            # upload_cfg_object_to_db(file, 'cfg')
-            connection.commit()
-            connection.close()"""
+    work_path=r"C:\Users\ia.kudryashov\Desktop\python_test"
     cfg_set = set()
-    for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt*'):
-        fl = _SupportSaveFile(file)
-        cfg = fl.parsing_by_prefix('cfg.', no_value=True)
+    for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt*', work_path):
+        SupportSaveFile = _SupportSaveFile(file, work_path)
+        cfg = SupportSaveFile.parsing_by_prefix('cfg.', no_value=True)
         if cfg in cfg_set:
             pass
         else:
-            fl.upload_cfg_object_to_csv()
+            cfg_set.add(cfg)
+
+            SupportSaveFile.upload_cfg_object_to_csv()
+            SupportSaveFile.upload_cfg_object_to_db()
+
+
