@@ -1,6 +1,7 @@
 import os
 import gzip
 import fnmatch
+import csv
 
 
 class _SupportSaveFile:
@@ -11,7 +12,6 @@ class _SupportSaveFile:
     file_full_path = None
     file_path = None
     file_name = None
-    file_content = None
     target_path = None
     cfg_name = None
 
@@ -21,23 +21,26 @@ class _SupportSaveFile:
         (self.file_path, self.file_name) = os.path.split(path)
         if 'SSHOW_SYS' in path:
             self.file_type = 'sys'
-            self.cfg_name = self.parsing(self.file_full_path, "cfg.", no_value=True)
+            self.cfg_name = self.parsing_by_prefix("cfg.", no_value=True)
         elif 'SSHOW_FABRIC' in path:
             self.file_type = 'fabric'
         else:
             self.file_type = 'unknown'
-        if '.gz' in path:
-            self.file_content = gzip.open(path,'rt').read()
-        else:
-            self.file_content = open(path, "rt", encoding="utf-8")
 
     def parsing_by_prefix(self, prefix, no_value=False):
         """
         Функция создания списка из строк с префиксами передаваемых в prefix
         """
         result = []
-        #with open(file_path, "rt", encoding="utf-8") as f:  # Открываем файл
-        for line in self.file_content:
+        if 'txt.gz' in self.file_name:
+            gz = gzip.open(self.file_full_path, 'rt')
+            fl = list(gz)
+        elif '.txt' in self.file_name:
+            fl = open(self.file_full_path, "rt", encoding="utf-8")
+        else:
+            print("wrong file extension")
+            return
+        for line in fl:
             line = line.strip()  # Удаляем пробелы в начале и в конце
             if not line:
                 continue
@@ -65,12 +68,50 @@ class _SupportSaveFile:
                 writer.writerow(line)
 
     def upload_cfg_object_to_csv(self):
-        if self.file_type = 'sys':
-            for obj in ('alias', 'zone'):
-                parsing_result = self.parsing_by_prefix(obj+'.')
-                self.csv_writer(parsing_result, self.cfg_name + "_"+obj+".csv")
+        if 'sys' in self.file_type:
+            for obj in ('alias.', 'zone.', 'cfg.'):
+                parsing_result = self.parsing_by_prefix(obj)
+                self.csv_writer(parsing_result, self.cfg_name + "_"+obj[:-1]+".csv")
         else:
-            print ('не SYS файл')
+            print('не SSHOW_SYS файл')
+
+    def upload_cfg_object_to_db(self, file, object_name):
+        """
+        Создает в базе данных таблицу с именем переденным в object_name (подходит только для alias и zone).
+        В таблицу заносятся данные полученные после парсинга файла переданного в file.
+        :param file:
+        :param object_name:
+        :return:
+        """
+        cursor.execute(
+            'CREATE TABLE ' + object_name + ' (' + object_name + '_id INTEGER PRIMARY KEY AUTOINCREMENT,' + object_name + '_name TEXT);')
+        find = object_name + '.'
+        object = parsing(file, find)
+        for i in range(len(object)):
+            name = str()
+            members = str()
+            members_column = str()
+            for j in range(len(object[i])):
+                if j == 0:
+                    name = object[i][j]
+                elif j == len(object[i]) - 1:
+                    members_column = members_column + object_name + '_member' + str(j)
+                    members = members + '"' + str(object[i][j]) + '"'
+                    try:
+                        cursor.execute(
+                            'ALTER TABLE ' + object_name + ' ADD COLUMN ' + object_name + '_member' + str(j) + ' TEXT;')
+                    except:
+                        pass
+                else:
+                    members_column = members_column + object_name + '_member' + str(j) + ', '
+                    members = members + '"' + str(object[i][j]) + '", '
+                    try:
+                        cursor.execute(
+                            'ALTER TABLE ' + object_name + ' ADD COLUMN ' + object_name + '_member' + str(j) + ' TEXT;')
+                    except:
+                        pass
+            cursor.execute(
+                'INSERT INTO ' + object_name + ' (' + object_name + '_name, ' + members_column + ') VALUES ("' + name + '", ' + members + ');')
 
 def find_all_files_by_template_in_subdirs(pattern, folder=os.getcwd()):
     """
@@ -85,5 +126,22 @@ def find_all_files_by_template_in_subdirs(pattern, folder=os.getcwd()):
     return result
 
 
-
 if __name__ == '__main__':
+    """
+
+            cfg_set.add(cfg)
+            connection = sqlite3.connect(cfg + '.sqlite')
+            cursor = connection.cursor()
+            upload_cfg_object_to_db(file, 'alias')
+            upload_cfg_object_to_db(file, 'zone')
+            # upload_cfg_object_to_db(file, 'cfg')
+            connection.commit()
+            connection.close()"""
+    cfg_set = set()
+    for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt*'):
+        fl = _SupportSaveFile(file)
+        cfg = fl.parsing_by_prefix('cfg.', no_value=True)
+        if cfg in cfg_set:
+            pass
+        else:
+            fl.upload_cfg_object_to_csv()

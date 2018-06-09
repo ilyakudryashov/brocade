@@ -16,8 +16,12 @@ print(temp1)
 
 
 
-f=gzip.open('C:\\Users\\ia.kudryashov\\PycharmProjects\\brocade\\SN6000B-SW1-SANA-S0cp-201805311510.SSHOW_AG.txt.gz', 'rt')
-print(f.read())
+f=gzip.open("C:\\Users\\ia.kudryashov\\PycharmProjects\\brocade\\msk1-san01-S6cp-201805241707.SSHOW_SYS.txt.gz", 'rt')
+g = list(f)
+
+
+for line in g:
+   print(line)
 
 
 
