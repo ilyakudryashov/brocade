@@ -3,6 +3,7 @@ import gzip
 import fnmatch
 import csv
 import sqlite3
+from pyparsing import *
 
 
 class _SupportSaveFile:
@@ -22,7 +23,7 @@ class _SupportSaveFile:
         (self.file_path, self.file_name) = os.path.split(path)
         if 'SSHOW_SYS' in path:
             self.file_type = 'sys'
-            self.cfg_name = self.parsing_by_prefix("cfg.", no_value=True)
+            self.cfg_name = self.parsing_cfg_object_by_prefix("cfg.", no_value=True)
         elif 'SSHOW_FABRIC' in path:
             self.file_type = 'fabric'
         elif 'SSHOW_SERVICE' in path:
@@ -30,18 +31,18 @@ class _SupportSaveFile:
         else:
             self.file_type = 'unknown'
 
-    def parsing_by_prefix(self, prefix, no_value=False):
+    def parsing_cfg_object_by_prefix(self, prefix, no_value=False):
         """
         Функция создания списка из строк с префиксами передаваемых в prefix
         """
         result = []
-        if 'txt.gz' in self.file_name:
+        if 'SSHOW_SYS.txt.gz' in self.file_name:
             gz = gzip.open(self.file_full_path, 'rt')
             fl = list(gz)
-        elif '.txt' in self.file_name:
+        elif 'SSHOW_SYS.txt' in self.file_name:
             fl = open(self.file_full_path, "rt", encoding="utf-8")
         else:
-            print("wrong file extension")
+            print("Wrong file, not a SSHOW_SYS")
             return
         for line in fl:
             line = line.strip()  # Удаляем пробелы в начале и в конце
@@ -73,7 +74,7 @@ class _SupportSaveFile:
     def upload_cfg_object_to_csv(self):
         if 'sys' in self.file_type:
             for obj in ('alias.', 'zone.', 'cfg.'):
-                parsing_result = self.parsing_by_prefix(obj)
+                parsing_result = self.parsing_cfg_object_by_prefix(obj)
                 self.csv_writer(parsing_result, self.cfg_name + "_"+obj[:-1]+".csv")
         else:
             print('не SSHOW_SYS файл')
@@ -89,7 +90,7 @@ class _SupportSaveFile:
         cursor.execute(
             'CREATE TABLE ' + object_name + ' (' + object_name + '_id INTEGER PRIMARY KEY AUTOINCREMENT,' + object_name + '_name TEXT);')
         find = object_name + '.'
-        object = self.parsing_by_prefix(find)
+        object = self.parsing_cfg_object_by_prefix(find)
         for i in range(len(object)):
             name = str()
             members = str()
@@ -129,6 +130,38 @@ class _SupportSaveFile:
         connection.commit()
         connection.close()
 
+    def parsing_ns_object(self):
+        result = []
+        if 'SSHOW_SERVICE.txt.gz' in self.file_name:
+            gz = gzip.open(self.file_full_path, 'rt')
+            fl = list(gz)
+        elif 'SSHOW_SERVICE.txt' in self.file_name:
+            fl = open(self.file_full_path, "rt", encoding="utf-8")
+        else:
+            print("Wrong file, not a SSHOW_SERVICE")
+            return
+        wwn = Word(alphanums + ':')
+        FabricPortName = 'Fabric Port Name: ' + wwn
+        PermanentPortName = "Permanent Port Name: " + wwn
+        datafile = OneOrMore(Group(PermanentPortName^FabricPortName))
+        for line in fl:
+            line = line.strip()
+            try:
+                s=datafile.parseString(line)
+                list(s)
+                print(s)
+            except:
+                pass
+
+
+    def upload_ns_object_to_csv(self):
+        pass
+
+    def upload_ns_object_to_db(self):
+        pass
+
+
+
 
 def find_all_files_by_template_in_subdirs(pattern, folder=os.getcwd()):
     """
@@ -144,17 +177,20 @@ def find_all_files_by_template_in_subdirs(pattern, folder=os.getcwd()):
 
 
 if __name__ == '__main__':
-    work_path=r"C:\Users\ia.kudryashov\Desktop\python_test"
-    cfg_set = set()
+    work_path = r"C:\Users\ia.kudryashov\Desktop\python_test"
+    """cfg_set = set()
     for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt*', work_path):
         SupportSaveFile = _SupportSaveFile(file, work_path)
-        cfg = SupportSaveFile.parsing_by_prefix('cfg.', no_value=True)
+        cfg = SupportSaveFile.parsing_cfg_object_by_prefix('cfg.', no_value=True)
         if cfg in cfg_set:
             pass
         else:
             cfg_set.add(cfg)
 
             SupportSaveFile.upload_cfg_object_to_csv()
-            SupportSaveFile.upload_cfg_object_to_db()
+            SupportSaveFile.upload_cfg_object_to_db()"""
+    file = r"C:\Users\ia.kudryashov\Desktop\python_test\IBM-B40-A1-S0cp-201804121534.SSHOW_SERVICE.txt.gz"
+    service = _SupportSaveFile(file, work_path)
+    service.parsing_ns_object()
 
 
