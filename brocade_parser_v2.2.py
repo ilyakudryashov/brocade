@@ -3,7 +3,7 @@ import gzip
 import fnmatch
 import csv
 import sqlite3
-from pyparsing import *
+#from pyparsing import *
 
 
 class _SupportSaveFile:
