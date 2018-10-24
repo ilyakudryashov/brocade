@@ -177,8 +177,9 @@ def find_all_files_by_template_in_subdirs(pattern, folder=os.getcwd()):
 
 
 if __name__ == '__main__':
-    work_path = r"C:\Users\ia.kudryashov\Desktop\python_test"
-    """cfg_set = set()
+    #work_path = r"C:\Users\ia.kudryashov\Desktop\python_test"
+    work_path = os.getcwd()
+    cfg_set = set()
     for file in find_all_files_by_template_in_subdirs('*SSHOW_SYS.txt*', work_path):
         SupportSaveFile = _SupportSaveFile(file, work_path)
         cfg = SupportSaveFile.parsing_cfg_object_by_prefix('cfg.', no_value=True)
@@ -188,9 +189,9 @@ if __name__ == '__main__':
             cfg_set.add(cfg)
 
             SupportSaveFile.upload_cfg_object_to_csv()
-            SupportSaveFile.upload_cfg_object_to_db()"""
-    file = r"C:\Users\ia.kudryashov\Desktop\python_test\IBM-B40-A1-S0cp-201804121534.SSHOW_SERVICE.txt.gz"
-    service = _SupportSaveFile(file, work_path)
-    service.parsing_ns_object()
+            SupportSaveFile.upload_cfg_object_to_db()
+    #file = r"C:\Users\ia.kudryashov\Desktop\python_test\SSHOW_FABRIC.txt"
+    #service = _SupportSaveFile(file, work_path)
+    #service.parsing_ns_object()
 
 
